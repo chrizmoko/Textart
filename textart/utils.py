@@ -4,6 +4,7 @@ File: textart/converter.py
 
 
 from PIL import Image
+import json
 
 from collections.abc import Iterable, Iterator
 
@@ -64,20 +65,82 @@ class Palette:
     def __str__(self) -> str:
         return ''.join(self._palette)
     
-    # Helper method
     def _value_to_index(self, value):
-        return int(value * (len(self._palette) - 1))
+        """Helper function that thresholds a real value into an index."""
+        return round(value * (len(self._palette) - 1))
     
-    # Helper method
     def _check_value_range(self, value):
+        """Helper method that raises a ValueError for out of range values."""
         if value < 0 or value > 1:
             raise ValueError('Expected a value within the range [0, 1].')
 
 
+class PaletteFactory:
+    """Manages palettes and patterns."""
+    
+    def __init__(self) -> None:
+        self._patterns = {}
+    
+    def register_pattern(self, name: str, pattern: str) -> None:
+        """Registers a pattern to the factory."""
+        self._patterns[name] = pattern
+    
+    def unregister_pattern(self, name: str) -> None:
+        """Unregisters a pattern from the factory."""
+        if name in self._patterns:
+            del self._patterns[name]
+    
+    def get_palette(self, name: str) -> Palette:
+        """Builds a palette from the pattern and returns it."""
+        if name not in self._patterns:
+            raise KeyError('Factory does not contain name.')
+        return Palette(self._patterns[name])
+    
+    def names(self) -> Iterator[str]:
+        """A view into the names registered to the factory."""
+        return self._patterns.keys()
+    
+    def patterns(self) -> Iterator[str]:
+        """A view into the patterns registered to the factory."""
+        return self._patterns.values()
+    
+    def entries(self) -> Iterator[tuple[str, str]]:
+        """A view into the names and their registered patterns."""
+        return self._patterns.items()
+    
+    def __iter__(self) -> Iterator[str]:
+        """A view into the names registered to the factory."""
+        return self.names()
+    
+    def __repr__(self) -> str:
+        entries = ','.join(repr(k) + ': ' + repr(v) for k, v in
+                           self._patterns.items())
+        return repr(self.__class__)[8:-2] + '({' + entries + '})'
+
+
+def read_palette_file(file_path: str) -> PaletteFactory:
+    """Reads a formatted json file and returns a PaletteFactory object based on
+    the palettes stored in the file. Errors in reading the file results in an
+    empty PaletteFactory object being returned.
+    """
+    with open(file_path, 'rb') as file:
+        factory = PaletteFactory()
+        
+        # Read from json file and register to factory
+        for key, value in json.load(file).items():
+            if type(key) != str or type(value) != str:
+                raise TypeError('JSON file data must all be type str.')
+            factory.register_pattern(key, value)
+            
+        return factory
+    
+    return PaletteFactory()
+
+
 class BaseImage:
-    """An encapsulation of the """ + repr(Image.Image)[8:-2] + """ class where
-    the image is processed and converted into a usable image for creating the
-    its text representation.
+    """An encapsulation of the 'PIL.Image.Image' class where the image is
+    processed and converted into a usable image for creating the its text
+    representation.
     
     The class does not hold a reference to the original image and does not
     maintain it.
