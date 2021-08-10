@@ -3,10 +3,23 @@ File: textart/converter.py
 """
 
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import json
+import os.path
 
 from collections.abc import Iterable, Iterator
+
+
+class TextartError(Exception):
+    """A generic textart package error."""
+    
+    def __init__(self, message) -> None:
+        self._message = message
+        Exception.__init__(self, message)
+    
+    def get_message(self) -> str:
+        """Returns the error message."""
+        return '[ERROR] ' + self._message
 
 
 class Palette:
@@ -135,6 +148,29 @@ def read_palette_file(file_path: str) -> PaletteFactory:
         return factory
     
     return PaletteFactory()
+
+
+def read_image_file(file_path: str) -> Image.Image:
+    """Opens and reads an image file and returns a copy of it."""
+    # Check file path
+    if not os.path.exists(file_path):
+        message = ('A file was not selected or does not exist. Please choose '
+                   'a valid file.')
+        raise TextartError(message)
+    
+    # Attempt to open file as image
+    try:
+        file = Image.open(file_path, 'r')
+    except UnidentifiedImageError:
+        message = ('The file selected could not be recognized as an image. '
+                   'Please choose a file that is an image.')
+        raise TextartError(message)
+    
+    # Copy image and close file
+    image = file.copy()
+    file.close()
+    
+    return image
 
 
 class BaseImage:
