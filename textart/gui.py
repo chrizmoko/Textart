@@ -1,11 +1,23 @@
 """
 File: textart/gui.py
 
-The module that defines and maintains the GUI of the program.
+The module that defines and maintains the GUI of the program. Moreover, the
+module is also an entry point to the program.
 """
 
 
-import textart.utils as utils
+import sys
+import os.path
+
+
+# Path resolution to allow package modules to be referenced as "textart.*"
+package_path = os.path.dirname(__file__)
+path, _ = os.path.split(package_path)
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+
+from textart import utils
 import tkinter as tk
 from tkinter import ttk, filedialog
 
@@ -428,7 +440,11 @@ class IntEntry(tk.Entry):
 
 def main():
     """The entry point of the application."""
-    palette_factory = utils.read_palette_file(r'./defaultpalettes.json')
+    # Create palette factory from json file
+    path = os.path.dirname(__file__) + os.path.sep
+    palette_factory = utils.read_palette_file(path + 'defaultpalettes.json')
+
+    # Create and run the application
     Application(tk.Tk(), palette_factory).run()
 
 
