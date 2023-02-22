@@ -25,7 +25,7 @@ python textart
 
 An image can be read by the gui and converted into textart that can be then copied from the text box.
 
-![GUI of program displaying textart of a sunflower.](./readme.images/gui_example.JPG)
+![GUI of program displaying textart of a sunflower.](./readme.images/gui_example.jpg)
 
 The textart output will always maintain the aspect ratio of the original image, but can be constrained to a maximum width or height to prevent the output from becoming too large. The above example is constrained to a maximum height of 60 characters and is displayed with a font size of 4 pts. Moreover, a palette can be chosen and reversed to stylize the ouput.
 
