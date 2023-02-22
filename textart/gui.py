@@ -19,6 +19,7 @@ if path not in sys.path:
 
 from textart import utils
 import tkinter as tk
+import tkinter.font as font
 from tkinter import ttk, filedialog
 
 
@@ -53,6 +54,7 @@ class Application:
         self._char_width_str = tk.StringVar()
         self._char_height_str = tk.StringVar()
         self._palette_str = tk.StringVar()
+        self._output_display_size_str = tk.StringVar()
 
         self._palette_display_text = None
         self._output_image_text = None
@@ -130,6 +132,17 @@ class Application:
         # Reverse the palette and update GUI
         self._palette.reverse()
         self._palette_display_text.set_text(self._palette)
+    
+    def _cmd_select_output_display_size(self, _):
+        """Command method for handling display size combobox selection."""
+        # Get output display font size from the combobox selection
+        output_display_size = int(self._output_display_size_str.get())
+
+        # Change display font size
+        font_name = 'TkFixedFont'
+        output_display_font = font.Font(font=font.nametofont(font_name))
+        output_display_font.configure(size=output_display_size)
+        self._output_image_text.configure(font=output_display_font)
 
     def _cmd_double_output_width(self):
         """Command method for doubling the width of the output text image."""
@@ -297,18 +310,23 @@ class Application:
             pady=(Application._INNER_PAD, 0)
         )
 
-        palette_combobox = ttk.Combobox(palette_management_frame,
+        palette_combobox = ttk.Combobox(
+            palette_management_frame,
             textvariable=self._palette_str,
             values=tuple(self._palette_factory.names()),
             state='readonly'
         )
-        palette_combobox.bind('<<ComboboxSelected>>', self._cmd_select_palette)
+        palette_combobox.bind(
+            '<<ComboboxSelected>>',
+            self._cmd_select_palette
+        )
         palette_combobox.set('Select palette...')
         palette_combobox.pack(
             side='left'
         )
 
-        reverse_palette_check = ttk.Checkbutton(palette_management_frame,
+        reverse_palette_check = ttk.Checkbutton(
+            palette_management_frame,
             text='Reverse palette',
             command=self._cmd_reverse_palette,
             state='disabled'
@@ -320,10 +338,11 @@ class Application:
         self._reverse_palette_check = reverse_palette_check
 
         # Palette display
-        palette_display_text = Text(frame,
+        palette_display_text = Text(
+            frame,
             width=128,
             height=1,
-            state='disabled'
+            state='disabled',
         )
         palette_display_text.pack(
             fill='x',
@@ -343,7 +362,37 @@ class Application:
             pady=Application._OUTER_PAD
         )
 
-        double_output_width_check = ttk.Checkbutton(frame,
+        # Output display management frame
+        output_display_management_frame = tk.Frame(frame)
+        output_display_management_frame.columnconfigure(0, weight=0)
+        output_display_management_frame.columnconfigure(1, weight=1)
+        output_display_management_frame.pack(
+            side='top',
+            fill='x',
+            expand=True
+        )
+
+        monospace_font = font.nametofont('TkFixedFont')
+        max_difference = 7
+        font_sizes = (monospace_font['size'] - i for i in range(max_difference))
+
+        size_combobox = ttk.Combobox(
+            output_display_management_frame,
+            textvariable=self._output_display_size_str,
+            values=tuple(font_sizes),
+            state='readonly'
+        )
+        size_combobox.bind(
+            '<<ComboboxSelected>>',
+            self._cmd_select_output_display_size
+        )
+        size_combobox.set('Select display font size...')
+        size_combobox.pack(
+            side='left'
+        )
+
+        double_output_width_check = ttk.Checkbutton(
+            output_display_management_frame,
             text='Stretch output width by double',
             command=self._cmd_double_output_width,
             state='disabled'
